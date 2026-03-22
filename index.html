@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi File Tool</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    text-align: center;
+    background: #111;
+    color: white;
+}
+.container {
+    padding: 20px;
+}
+button {
+    padding: 10px;
+    margin: 10px;
+    border: none;
+    background: #00ffcc;
+    color: black;
+    cursor: pointer;
+}
+input {
+    margin: 10px;
+}
+canvas {
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🔥 Multi File Converter</h1>
+
+<!-- IMAGE TO PDF -->
+<h2>Image → PDF</h2>
+<input type="file" id="imgInput" accept="image/*">
+<button onclick="convertToPDF()">Convert</button>
+
+<!-- PDF TO IMAGE -->
+<h2>PDF → Image</h2>
+<input type="file" id="pdfInput" accept="application/pdf">
+<button onclick="pdfToImage()">Convert</button>
+<div id="pdfImages"></div>
+
+<!-- IMAGE COMPRESS -->
+<h2>Compress Image</h2>
+<input type="file" id="compressInput" accept="image/*">
+<button onclick="compressImage()">Compress</button>
+<br>
+<a id="downloadLink"></a>
+
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+
+// IMAGE TO PDF
+function convertToPDF() {
+    const file = document.getElementById('imgInput').files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+
+        img.onload = function() {
+            const pdf = new jsPDF();
+            pdf.addImage(img, 'JPEG', 10, 10, 180, 160);
+            pdf.save("converted.pdf");
+        }
+    }
+    reader.readAsDataURL(file);
+}
+
+// PDF TO IMAGE
+function pdfToImage() {
+    const file = document.getElementById('pdfInput').files[0];
+    const reader = new FileReader();
+
+    reader.onload = function() {
+        const typedarray = new Uint8Array(this.result);
+
+        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+            for (let i = 1; i <= pdf.numPages; i++) {
+                pdf.getPage(i).then(page => {
+                    const canvas = document.createElement("canvas");
+                    const context = canvas.getContext('2d');
+                    const viewport = page.getViewport({ scale: 1.5 });
+
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    });
+
+                    document.getElementById("pdfImages").appendChild(canvas);
+                });
+            }
+        });
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// IMAGE COMPRESS
+function compressImage() {
+    const file = document.getElementById('compressInput').files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = img.width * 0.5;
+            canvas.height = img.height * 0.5;
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.getElementById("downloadLink");
+
+                link.href = url;
+                link.download = "compressed.jpg";
+                link.innerText = "Download Compressed Image";
+            }, 'image/jpeg', 0.6);
+        }
+    }
+    reader.readAsDataURL(file);
+}
+</script>
+
+</body>
+</html>
