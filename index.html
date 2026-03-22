@@ -3,60 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multi File Tool</title>
+<title>Free File Tools - Image & PDF Converter</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
 <style>
 body {
-    font-family: Arial;
-    text-align: center;
-    background: #111;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
     color: white;
 }
+
+h1 {
+    margin-bottom: 10px;
+}
+
 .container {
+    max-width: 900px;
+    margin: auto;
     padding: 20px;
 }
+
+.card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
 button {
-    padding: 10px;
-    margin: 10px;
+    padding: 10px 20px;
     border: none;
-    background: #00ffcc;
+    border-radius: 10px;
+    background: #00ffd5;
     color: black;
     cursor: pointer;
+    font-weight: bold;
 }
+
 input {
-    margin: 10px;
+    margin: 10px 0;
 }
+
+.drop-area {
+    border: 2px dashed #00ffd5;
+    padding: 20px;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.status {
+    font-size: 14px;
+    margin-top: 10px;
+    color: #ccc;
+}
+
 canvas {
+    max-width: 100%;
     margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
-<div class="container">
 
-<h1>🔥 Multi File Converter</h1>
+<div class="container">
+<h1>⚡ Free File Tools</h1>
+<p>Convert, Compress & Manage Files Instantly</p>
 
 <!-- IMAGE TO PDF -->
-<h2>Image → PDF</h2>
-<input type="file" id="imgInput" accept="image/*">
+<div class="card">
+<h2>🖼️ Image → PDF</h2>
+
+<div class="drop-area" onclick="imgInput.click()">
+Drop or Click to Upload Image
+</div>
+
+<input type="file" id="imgInput" hidden accept="image/*">
 <button onclick="convertToPDF()">Convert</button>
+<div class="status" id="imgStatus"></div>
+</div>
 
 <!-- PDF TO IMAGE -->
-<h2>PDF → Image</h2>
+<div class="card">
+<h2>📄 PDF → Image</h2>
+
 <input type="file" id="pdfInput" accept="application/pdf">
 <button onclick="pdfToImage()">Convert</button>
-<div id="pdfImages"></div>
 
-<!-- IMAGE COMPRESS -->
-<h2>Compress Image</h2>
+<div id="pdfImages"></div>
+<div class="status" id="pdfStatus"></div>
+</div>
+
+<!-- COMPRESS -->
+<div class="card">
+<h2>📉 Compress Image</h2>
+
 <input type="file" id="compressInput" accept="image/*">
 <button onclick="compressImage()">Compress</button>
-<br>
+
+<br><br>
 <a id="downloadLink"></a>
+<div class="status" id="compressStatus"></div>
+</div>
 
 </div>
 
@@ -66,6 +119,10 @@ const { jsPDF } = window.jspdf;
 // IMAGE TO PDF
 function convertToPDF() {
     const file = document.getElementById('imgInput').files[0];
+    if (!file) return;
+
+    document.getElementById('imgStatus').innerText = "Processing...";
+
     const reader = new FileReader();
 
     reader.onload = function(e) {
@@ -76,6 +133,8 @@ function convertToPDF() {
             const pdf = new jsPDF();
             pdf.addImage(img, 'JPEG', 10, 10, 180, 160);
             pdf.save("converted.pdf");
+
+            document.getElementById('imgStatus').innerText = "Done ✅";
         }
     }
     reader.readAsDataURL(file);
@@ -84,12 +143,18 @@ function convertToPDF() {
 // PDF TO IMAGE
 function pdfToImage() {
     const file = document.getElementById('pdfInput').files[0];
+    if (!file) return;
+
+    document.getElementById('pdfStatus').innerText = "Rendering pages...";
+
     const reader = new FileReader();
 
     reader.onload = function() {
         const typedarray = new Uint8Array(this.result);
 
         pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+            document.getElementById("pdfImages").innerHTML = "";
+
             for (let i = 1; i <= pdf.numPages; i++) {
                 pdf.getPage(i).then(page => {
                     const canvas = document.createElement("canvas");
@@ -107,14 +172,21 @@ function pdfToImage() {
                     document.getElementById("pdfImages").appendChild(canvas);
                 });
             }
+
+            document.getElementById('pdfStatus').innerText = "Done ✅";
         });
     };
+
     reader.readAsArrayBuffer(file);
 }
 
-// IMAGE COMPRESS
+// COMPRESS
 function compressImage() {
     const file = document.getElementById('compressInput').files[0];
+    if (!file) return;
+
+    document.getElementById('compressStatus').innerText = "Compressing...";
+
     const reader = new FileReader();
 
     reader.onload = function(e) {
@@ -136,10 +208,13 @@ function compressImage() {
 
                 link.href = url;
                 link.download = "compressed.jpg";
-                link.innerText = "Download Compressed Image";
+                link.innerText = "⬇ Download Compressed Image";
+
+                document.getElementById('compressStatus').innerText = "Done ✅";
             }, 'image/jpeg', 0.6);
         }
     }
+
     reader.readAsDataURL(file);
 }
 </script>
