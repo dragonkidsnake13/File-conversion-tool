@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Free File Tools - Image & PDF Converter</title>
+<title>Ultimate File Tools</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -11,58 +11,40 @@
 <style>
 body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    font-family: 'Segoe UI';
+    background: #0f172a;
     color: white;
+    transition: 0.3s;
 }
-
-h1 {
-    margin-bottom: 10px;
+.light {
+    background: #f5f5f5;
+    color: black;
 }
-
 .container {
     max-width: 900px;
     margin: auto;
     padding: 20px;
 }
-
 .card {
     background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
     padding: 20px;
     margin: 20px 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-radius: 15px;
 }
-
 button {
-    padding: 10px 20px;
-    border: none;
+    padding: 10px;
     border-radius: 10px;
-    background: #00ffd5;
-    color: black;
+    border: none;
     cursor: pointer;
-    font-weight: bold;
+    margin-top: 10px;
 }
-
-input {
-    margin: 10px 0;
-}
-
-.drop-area {
+.drop {
     border: 2px dashed #00ffd5;
     padding: 20px;
-    border-radius: 15px;
-    cursor: pointer;
+    margin: 10px 0;
+    border-radius: 10px;
 }
-
-.status {
-    font-size: 14px;
-    margin-top: 10px;
-    color: #ccc;
-}
-
-canvas {
+canvas, img {
     max-width: 100%;
     margin-top: 10px;
 }
@@ -72,43 +54,40 @@ canvas {
 <body>
 
 <div class="container">
-<h1>⚡ Free File Tools</h1>
-<p>Convert, Compress & Manage Files Instantly</p>
 
-<!-- IMAGE TO PDF -->
+<h1>🚀 Ultimate File Tools</h1>
+<button onclick="toggleTheme()">🌙 Toggle Theme</button>
+
+<!-- MULTI IMAGE TO PDF -->
 <div class="card">
-<h2>🖼️ Image → PDF</h2>
-
-<div class="drop-area" onclick="imgInput.click()">
-Drop or Click to Upload Image
-</div>
-
-<input type="file" id="imgInput" hidden accept="image/*">
-<button onclick="convertToPDF()">Convert</button>
-<div class="status" id="imgStatus"></div>
+<h2>🖼️ Images → PDF (Multiple)</h2>
+<div class="drop" onclick="multiImg.click()">Drop or Click</div>
+<input type="file" id="multiImg" multiple hidden accept="image/*">
+<button onclick="multiToPDF()">Convert</button>
+<div id="previewImgs"></div>
 </div>
 
 <!-- PDF TO IMAGE -->
 <div class="card">
-<h2>📄 PDF → Image</h2>
-
-<input type="file" id="pdfInput" accept="application/pdf">
-<button onclick="pdfToImage()">Convert</button>
-
-<div id="pdfImages"></div>
-<div class="status" id="pdfStatus"></div>
+<h2>📄 PDF → Images</h2>
+<div class="drop" onclick="pdfFile.click()">Drop PDF</div>
+<input type="file" id="pdfFile" hidden>
+<button onclick="pdfToImages()">Convert</button>
+<div id="pdfOutput"></div>
+<button onclick="downloadAll()">Download All</button>
 </div>
 
 <!-- COMPRESS -->
 <div class="card">
-<h2>📉 Compress Image</h2>
-
-<input type="file" id="compressInput" accept="image/*">
-<button onclick="compressImage()">Compress</button>
-
-<br><br>
-<a id="downloadLink"></a>
-<div class="status" id="compressStatus"></div>
+<h2>📉 Smart Image Compressor</h2>
+<input type="file" id="compressFile">
+<br>
+<label>Quality: <span id="qVal">0.7</span></label>
+<input type="range" min="0.1" max="1" step="0.1" value="0.7" id="quality">
+<button onclick="compress()">Compress</button>
+<br>
+<img id="preview">
+<a id="dl"></a>
 </div>
 
 </div>
@@ -116,76 +95,92 @@ Drop or Click to Upload Image
 <script>
 const { jsPDF } = window.jspdf;
 
-// IMAGE TO PDF
-function convertToPDF() {
-    const file = document.getElementById('imgInput').files[0];
-    if (!file) return;
+// THEME
+function toggleTheme() {
+    document.body.classList.toggle("light");
+}
 
-    document.getElementById('imgStatus').innerText = "Processing...";
+// MULTI IMAGE TO PDF
+function multiToPDF() {
+    const files = document.getElementById("multiImg").files;
+    const pdf = new jsPDF();
 
-    const reader = new FileReader();
+    let count = 0;
 
-    reader.onload = function(e) {
-        const img = new Image();
-        img.src = e.target.result;
+    Array.from(files).forEach((file, i) => {
+        const reader = new FileReader();
 
-        img.onload = function() {
-            const pdf = new jsPDF();
-            pdf.addImage(img, 'JPEG', 10, 10, 180, 160);
-            pdf.save("converted.pdf");
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
 
-            document.getElementById('imgStatus').innerText = "Done ✅";
+            img.onload = function() {
+                if (i > 0) pdf.addPage();
+                pdf.addImage(img, 'JPEG', 10, 10, 180, 160);
+                count++;
+
+                if (count === files.length) {
+                    pdf.save("multi.pdf");
+                }
+            }
         }
-    }
-    reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+    });
 }
 
 // PDF TO IMAGE
-function pdfToImage() {
-    const file = document.getElementById('pdfInput').files[0];
-    if (!file) return;
+let images = [];
 
-    document.getElementById('pdfStatus').innerText = "Rendering pages...";
-
+function pdfToImages() {
+    const file = document.getElementById("pdfFile").files[0];
     const reader = new FileReader();
 
     reader.onload = function() {
-        const typedarray = new Uint8Array(this.result);
+        const arr = new Uint8Array(this.result);
 
-        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-            document.getElementById("pdfImages").innerHTML = "";
+        pdfjsLib.getDocument(arr).promise.then(pdf => {
+            document.getElementById("pdfOutput").innerHTML = "";
+            images = [];
 
             for (let i = 1; i <= pdf.numPages; i++) {
                 pdf.getPage(i).then(page => {
                     const canvas = document.createElement("canvas");
-                    const context = canvas.getContext('2d');
-                    const viewport = page.getViewport({ scale: 1.5 });
+                    const ctx = canvas.getContext("2d");
+                    const vp = page.getViewport({ scale: 1.5 });
 
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
+                    canvas.height = vp.height;
+                    canvas.width = vp.width;
 
-                    page.render({
-                        canvasContext: context,
-                        viewport: viewport
-                    });
+                    page.render({ canvasContext: ctx, viewport: vp });
 
-                    document.getElementById("pdfImages").appendChild(canvas);
+                    document.getElementById("pdfOutput").appendChild(canvas);
+
+                    images.push(canvas.toDataURL("image/png"));
                 });
             }
-
-            document.getElementById('pdfStatus').innerText = "Done ✅";
         });
-    };
-
+    }
     reader.readAsArrayBuffer(file);
 }
 
-// COMPRESS
-function compressImage() {
-    const file = document.getElementById('compressInput').files[0];
-    if (!file) return;
+// DOWNLOAD ALL
+function downloadAll() {
+    images.forEach((img, i) => {
+        const a = document.createElement("a");
+        a.href = img;
+        a.download = "page_" + (i+1) + ".png";
+        a.click();
+    });
+}
 
-    document.getElementById('compressStatus').innerText = "Compressing...";
+// COMPRESS
+document.getElementById("quality").oninput = e => {
+    document.getElementById("qVal").innerText = e.target.value;
+}
+
+function compress() {
+    const file = document.getElementById("compressFile").files[0];
+    const quality = document.getElementById("quality").value;
 
     const reader = new FileReader();
 
@@ -194,27 +189,27 @@ function compressImage() {
         img.src = e.target.result;
 
         img.onload = function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
 
-            canvas.width = img.width * 0.5;
-            canvas.height = img.height * 0.5;
+            canvas.width = img.width;
+            canvas.height = img.height;
 
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
 
-            canvas.toBlob(function(blob) {
+            canvas.toBlob(blob => {
                 const url = URL.createObjectURL(blob);
-                const link = document.getElementById("downloadLink");
 
-                link.href = url;
-                link.download = "compressed.jpg";
-                link.innerText = "⬇ Download Compressed Image";
+                document.getElementById("preview").src = url;
 
-                document.getElementById('compressStatus').innerText = "Done ✅";
-            }, 'image/jpeg', 0.6);
+                const a = document.getElementById("dl");
+                a.href = url;
+                a.download = "compressed.jpg";
+                a.innerText = "⬇ Download";
+
+            }, "image/jpeg", quality);
         }
     }
-
     reader.readAsDataURL(file);
 }
 </script>
