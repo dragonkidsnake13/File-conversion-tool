@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ultimate File Tools</title>
 
+<link rel="manifest" href="manifest.json">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
@@ -14,11 +16,6 @@ body {
     font-family: 'Segoe UI';
     background: #0f172a;
     color: white;
-    transition: 0.3s;
-}
-.light {
-    background: #f5f5f5;
-    color: black;
 }
 .container {
     max-width: 900px;
@@ -36,17 +33,27 @@ button {
     border-radius: 10px;
     border: none;
     cursor: pointer;
-    margin-top: 10px;
 }
 .drop {
     border: 2px dashed #00ffd5;
     padding: 20px;
     margin: 10px 0;
-    border-radius: 10px;
 }
-canvas, img {
-    max-width: 100%;
-    margin-top: 10px;
+.status {
+    font-size: 14px;
+    color: #aaa;
+}
+.ad {
+    margin: 20px 0;
+    padding: 20px;
+    background: #222;
+    text-align: center;
+}
+.badge {
+    background: green;
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 12px;
 }
 </style>
 </head>
@@ -56,161 +63,183 @@ canvas, img {
 <div class="container">
 
 <h1>🚀 Ultimate File Tools</h1>
-<button onclick="toggleTheme()">🌙 Toggle Theme</button>
+<p class="badge">🔐 100% Private – Files never leave your device</p>
+
+<div class="ad">💰 Ad Space (Paste AdSense here)</div>
+
+<p id="visits"></p>
 
 <!-- MULTI IMAGE TO PDF -->
 <div class="card">
-<h2>🖼️ Images → PDF (Multiple)</h2>
-<div class="drop" onclick="multiImg.click()">Drop or Click</div>
-<input type="file" id="multiImg" multiple hidden accept="image/*">
-<button onclick="multiToPDF()">Convert</button>
-<div id="previewImgs"></div>
+<h2>🖼️ Images → PDF</h2>
+<input type="file" id="img" multiple>
+<button onclick="toPDF()">Convert</button>
+<p class="status" id="s1"></p>
 </div>
 
 <!-- PDF TO IMAGE -->
 <div class="card">
 <h2>📄 PDF → Images</h2>
-<div class="drop" onclick="pdfFile.click()">Drop PDF</div>
-<input type="file" id="pdfFile" hidden>
-<button onclick="pdfToImages()">Convert</button>
-<div id="pdfOutput"></div>
-<button onclick="downloadAll()">Download All</button>
+<input type="file" id="pdf">
+<button onclick="toImg()">Convert</button>
+<div id="out"></div>
 </div>
 
 <!-- COMPRESS -->
 <div class="card">
-<h2>📉 Smart Image Compressor</h2>
-<input type="file" id="compressFile">
-<br>
-<label>Quality: <span id="qVal">0.7</span></label>
-<input type="range" min="0.1" max="1" step="0.1" value="0.7" id="quality">
+<h2>📉 Compress</h2>
+<input type="file" id="comp">
+<input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7">
 <button onclick="compress()">Compress</button>
-<br>
-<img id="preview">
 <a id="dl"></a>
 </div>
+
+<!-- AI ENHANCER -->
+<div class="card">
+<h2>🤖 AI Image Enhancer</h2>
+<input type="file" id="ai">
+<button onclick="enhance()">Enhance</button>
+<br>
+<canvas id="aiCanvas"></canvas>
+</div>
+
+<div class="ad">💰 Ad Space</div>
 
 </div>
 
 <script>
 const { jsPDF } = window.jspdf;
 
-// THEME
-function toggleTheme() {
-    document.body.classList.toggle("light");
-}
+// VISITOR COUNT
+let v = localStorage.getItem("visits") || 0;
+v++;
+localStorage.setItem("visits", v);
+document.getElementById("visits").innerText = "👀 Visitors: " + v;
 
-// MULTI IMAGE TO PDF
-function multiToPDF() {
-    const files = document.getElementById("multiImg").files;
-    const pdf = new jsPDF();
-
-    let count = 0;
+// IMAGE → PDF
+function toPDF() {
+    let files = document.getElementById("img").files;
+    let pdf = new jsPDF();
+    let done = 0;
 
     Array.from(files).forEach((file, i) => {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            const img = new Image();
+        let r = new FileReader();
+        r.onload = e => {
+            let img = new Image();
             img.src = e.target.result;
 
-            img.onload = function() {
+            img.onload = () => {
                 if (i > 0) pdf.addPage();
                 pdf.addImage(img, 'JPEG', 10, 10, 180, 160);
-                count++;
-
-                if (count === files.length) {
-                    pdf.save("multi.pdf");
+                done++;
+                if (done === files.length) {
+                    pdf.save("file.pdf");
+                    document.getElementById("s1").innerText = "Done ✅";
                 }
             }
         }
-        reader.readAsDataURL(file);
+        r.readAsDataURL(file);
     });
 }
 
-// PDF TO IMAGE
-let images = [];
+// PDF → IMAGE
+function toImg() {
+    let file = document.getElementById("pdf").files[0];
+    let r = new FileReader();
 
-function pdfToImages() {
-    const file = document.getElementById("pdfFile").files[0];
-    const reader = new FileReader();
-
-    reader.onload = function() {
-        const arr = new Uint8Array(this.result);
+    r.onload = function() {
+        let arr = new Uint8Array(this.result);
 
         pdfjsLib.getDocument(arr).promise.then(pdf => {
-            document.getElementById("pdfOutput").innerHTML = "";
-            images = [];
+            document.getElementById("out").innerHTML = "";
 
             for (let i = 1; i <= pdf.numPages; i++) {
                 pdf.getPage(i).then(page => {
-                    const canvas = document.createElement("canvas");
-                    const ctx = canvas.getContext("2d");
-                    const vp = page.getViewport({ scale: 1.5 });
+                    let c = document.createElement("canvas");
+                    let ctx = c.getContext("2d");
+                    let vp = page.getViewport({ scale: 1.5 });
 
-                    canvas.height = vp.height;
-                    canvas.width = vp.width;
+                    c.height = vp.height;
+                    c.width = vp.width;
 
                     page.render({ canvasContext: ctx, viewport: vp });
-
-                    document.getElementById("pdfOutput").appendChild(canvas);
-
-                    images.push(canvas.toDataURL("image/png"));
+                    document.getElementById("out").appendChild(c);
                 });
             }
         });
     }
-    reader.readAsArrayBuffer(file);
-}
-
-// DOWNLOAD ALL
-function downloadAll() {
-    images.forEach((img, i) => {
-        const a = document.createElement("a");
-        a.href = img;
-        a.download = "page_" + (i+1) + ".png";
-        a.click();
-    });
+    r.readAsArrayBuffer(file);
 }
 
 // COMPRESS
-document.getElementById("quality").oninput = e => {
-    document.getElementById("qVal").innerText = e.target.value;
-}
-
 function compress() {
-    const file = document.getElementById("compressFile").files[0];
-    const quality = document.getElementById("quality").value;
+    let file = document.getElementById("comp").files[0];
+    let q = document.getElementById("q").value;
 
-    const reader = new FileReader();
+    let r = new FileReader();
 
-    reader.onload = function(e) {
-        const img = new Image();
+    r.onload = e => {
+        let img = new Image();
         img.src = e.target.result;
 
-        img.onload = function() {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
+        img.onload = () => {
+            let c = document.createElement("canvas");
+            let ctx = c.getContext("2d");
 
-            canvas.width = img.width;
-            canvas.height = img.height;
+            c.width = img.width;
+            c.height = img.height;
 
             ctx.drawImage(img, 0, 0);
 
-            canvas.toBlob(blob => {
-                const url = URL.createObjectURL(blob);
+            c.toBlob(blob => {
+                let url = URL.createObjectURL(blob);
+                let a = document.getElementById("dl");
 
-                document.getElementById("preview").src = url;
-
-                const a = document.getElementById("dl");
                 a.href = url;
                 a.download = "compressed.jpg";
                 a.innerText = "⬇ Download";
-
-            }, "image/jpeg", quality);
+            }, "image/jpeg", q);
         }
     }
-    reader.readAsDataURL(file);
+    r.readAsDataURL(file);
+}
+
+// AI ENHANCE (simple sharpen effect)
+function enhance() {
+    let file = document.getElementById("ai").files[0];
+    let r = new FileReader();
+
+    r.onload = e => {
+        let img = new Image();
+        img.src = e.target.result;
+
+        img.onload = () => {
+            let c = document.getElementById("aiCanvas");
+            let ctx = c.getContext("2d");
+
+            c.width = img.width;
+            c.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            let imgData = ctx.getImageData(0,0,c.width,c.height);
+            let d = imgData.data;
+
+            for (let i = 0; i < d.length; i+=4) {
+                d[i] *= 1.1;     // R
+                d[i+1] *= 1.1;   // G
+                d[i+2] *= 1.1;   // B
+            }
+
+            ctx.putImageData(imgData,0,0);
+        }
+    }
+    r.readAsDataURL(file);
+}
+
+// PWA
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
 }
 </script>
 
