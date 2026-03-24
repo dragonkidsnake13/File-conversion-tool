@@ -33,20 +33,23 @@ body {
     margin: 20px 0;
     border-radius: 15px;
 }
+.preview-box {
+    display: none;
+    margin-top: 10px;
+    padding: 10px;
+    border: 2px dashed #00ffd5;
+    border-radius: 10px;
+    text-align: center;
+}
+.preview-box img {
+    max-width: 100%;
+    max-height: 200px;
+}
 button {
     padding: 10px;
     border-radius: 10px;
     border: none;
     cursor: pointer;
-}
-.drop {
-    border: 2px dashed #00ffd5;
-    padding: 20px;
-    margin: 10px 0;
-}
-.status {
-    font-size: 14px;
-    color: #aaa;
 }
 .ad {
     margin: 20px 0;
@@ -70,33 +73,37 @@ button {
 <h1>🚀 Ultimate File Tools</h1>
 
 <p>
-Welcome to Ultimate File Tools – your all-in-one free online solution to convert images to PDF, extract images from PDF files, compress images, and enhance image quality instantly.
-All tools work directly in your browser with no file upload, ensuring maximum privacy and speed.
+All-in-one tool: convert images ↔ PDF, compress, enhance. 100% private (runs in browser).
 </p>
 
-<p class="badge">🔐 100% Private – Files never leave your device</p>
+<p class="badge">🔐 Files never leave your device</p>
 
-<div class="ad">💰 Ad Space (Paste AdSense here)</div>
+<div class="ad">💰 Ad Space</div>
 
 <p id="visits"></p>
 
+<!-- IMAGE → PDF -->
 <div class="card">
 <h2>🖼️ Images → PDF</h2>
-<input type="file" id="img" multiple>
+<input type="file" id="img" multiple accept="image/*">
+<div class="preview-box" id="imgPreview"></div>
 <button onclick="toPDF()">Convert</button>
-<p class="status" id="s1"></p>
+<p id="s1"></p>
 </div>
 
+<!-- PDF → IMAGE -->
 <div class="card">
 <h2>📄 PDF → Images</h2>
-<input type="file" id="pdf">
+<input type="file" id="pdf" accept="application/pdf">
 <button onclick="toImg()">Convert</button>
 <div id="out"></div>
 </div>
 
+<!-- COMPRESS -->
 <div class="card">
 <h2>📉 Compress</h2>
-<input type="file" id="comp">
+<input type="file" id="comp" accept="image/*">
+<div class="preview-box" id="compPreview"></div>
 
 <label>Quality: <span id="qVal">0.7</span></label>
 <input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7" oninput="qVal.innerText=this.value">
@@ -105,21 +112,25 @@ All tools work directly in your browser with no file upload, ensuring maximum pr
 <a id="dl"></a>
 </div>
 
+<!-- AI ENHANCER -->
 <div class="card">
 <h2>🤖 AI Image Enhancer</h2>
-<input type="file" id="ai">
+<input type="file" id="ai" accept="image/*">
+<div class="preview-box" id="aiPreview"></div>
 <button onclick="enhance()">Enhance</button>
-<br>
+<br><br>
 <canvas id="aiCanvas"></canvas>
+<br>
+<a id="aiDownload"></a>
 </div>
 
 <div class="ad">💰 Ad Space</div>
 
 <hr>
-<p style="text-align:center; font-size:14px;">
-<a href="privacy.html">Privacy Policy</a> |
-<a href="terms.html">Terms & Conditions</a> |
-<a href="about.html">About Us</a> |
+<p style="text-align:center;">
+<a href="privacy.html">Privacy</a> |
+<a href="terms.html">Terms</a> |
+<a href="about.html">About</a> |
 <a href="contact.html">Contact</a>
 </p>
 
@@ -128,156 +139,144 @@ All tools work directly in your browser with no file upload, ensuring maximum pr
 <script>
 const { jsPDF } = window.jspdf;
 
-// VISITOR COUNT
+// visits
 let v = localStorage.getItem("visits") || 0;
-v++;
-localStorage.setItem("visits", v);
-document.getElementById("visits").innerText = "👀 Visitors: " + v;
+localStorage.setItem("visits", ++v);
+visits.innerText = "👀 Visitors: " + v;
 
-// ✅ FULL PAGE FILL IMAGE → PDF
+// preview helper
+function showPreview(input, boxId) {
+    const box = document.getElementById(boxId);
+    box.innerHTML = "";
+    if (!input.files[0]) return;
+
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(input.files[0]);
+    box.appendChild(img);
+    box.style.display = "block";
+}
+
+img.onchange = () => showPreview(img, "imgPreview");
+comp.onchange = () => showPreview(comp, "compPreview");
+ai.onchange = () => showPreview(ai, "aiPreview");
+
+// IMAGE → PDF (FULL FILL)
 function toPDF() {
-    let files = document.getElementById("img").files;
-
-    if (!files.length) {
-        alert("Please upload images first");
-        return;
-    }
+    let files = img.files;
+    if (!files.length) return alert("Upload images");
 
     let pdf = new jsPDF();
-    let done = 0;
 
     Array.from(files).forEach((file, i) => {
         let r = new FileReader();
-
         r.onload = e => {
-            let img = new Image();
-            img.src = e.target.result;
+            let image = new Image();
+            image.src = e.target.result;
 
-            img.onload = () => {
+            image.onload = () => {
+                const pw = pdf.internal.pageSize.getWidth();
+                const ph = pdf.internal.pageSize.getHeight();
 
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const ratio = Math.max(pw / image.width, ph / image.height);
 
-                const imgWidth = img.width;
-                const imgHeight = img.height;
+                const w = image.width * ratio;
+                const h = image.height * ratio;
 
-                // 🔥 FULL FILL (no empty space)
-                const ratio = Math.max(pdfWidth / imgWidth, pdfHeight / imgHeight);
-
-                const newWidth = imgWidth * ratio;
-                const newHeight = imgHeight * ratio;
-
-                const x = (pdfWidth - newWidth) / 2;
-                const y = (pdfHeight - newHeight) / 2;
+                const x = (pw - w) / 2;
+                const y = (ph - h) / 2;
 
                 if (i > 0) pdf.addPage();
+                pdf.addImage(image, 'JPEG', x, y, w, h);
 
-                pdf.addImage(img, 'JPEG', x, y, newWidth, newHeight);
-
-                done++;
-
-                if (done === files.length) {
+                if (i === files.length - 1) {
                     pdf.save("file.pdf");
-                    document.getElementById("s1").innerText = "Done ✅";
+                    s1.innerText = "Done ✅";
                 }
-            }
-        }
-
+            };
+        };
         r.readAsDataURL(file);
     });
 }
 
-// PDF → IMAGE
+// PDF → IMAGE (WITH DOWNLOAD)
 function toImg() {
-    let file = document.getElementById("pdf").files[0];
-
-    if (!file) {
-        alert("Please upload a PDF file");
-        return;
-    }
+    let file = pdf.files[0];
+    if (!file) return alert("Upload PDF");
 
     let r = new FileReader();
-
     r.onload = function() {
-        let arr = new Uint8Array(this.result);
+        pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdfDoc => {
+            out.innerHTML = "";
 
-        pdfjsLib.getDocument(arr).promise.then(pdf => {
-            document.getElementById("out").innerHTML = "";
-
-            for (let i = 1; i <= pdf.numPages; i++) {
-                pdf.getPage(i).then(page => {
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                pdfDoc.getPage(i).then(page => {
                     let c = document.createElement("canvas");
                     let ctx = c.getContext("2d");
                     let vp = page.getViewport({ scale: 1.5 });
 
-                    c.height = vp.height;
                     c.width = vp.width;
+                    c.height = vp.height;
 
                     page.render({ canvasContext: ctx, viewport: vp });
-                    document.getElementById("out").appendChild(c);
+
+                    let btn = document.createElement("button");
+                    btn.innerText = "⬇ Download Page " + i;
+                    btn.onclick = () => {
+                        let link = document.createElement("a");
+                        link.download = "page_" + i + ".png";
+                        link.href = c.toDataURL();
+                        link.click();
+                    };
+
+                    out.appendChild(c);
+                    out.appendChild(btn);
                 });
             }
         });
-    }
+    };
     r.readAsArrayBuffer(file);
 }
 
 // COMPRESS
 function compress() {
-    let file = document.getElementById("comp").files[0];
-
-    if (!file) {
-        alert("Upload an image first");
-        return;
-    }
-
-    let q = document.getElementById("q").value;
+    let file = comp.files[0];
+    if (!file) return alert("Upload image");
 
     let r = new FileReader();
-
     r.onload = e => {
         let img = new Image();
         img.src = e.target.result;
 
         img.onload = () => {
             let c = document.createElement("canvas");
-            let ctx = c.getContext("2d");
-
             c.width = img.width;
             c.height = img.height;
 
-            ctx.drawImage(img, 0, 0);
+            c.getContext("2d").drawImage(img, 0, 0);
 
             c.toBlob(blob => {
                 let url = URL.createObjectURL(blob);
-                let a = document.getElementById("dl");
-
-                a.href = url;
-                a.download = "compressed.jpg";
-                a.innerText = "⬇ Download";
-            }, "image/jpeg", q);
-        }
-    }
+                dl.href = url;
+                dl.download = "compressed.jpg";
+                dl.innerText = "⬇ Download";
+            }, "image/jpeg", q.value);
+        };
+    };
     r.readAsDataURL(file);
 }
 
-// AI ENHANCE
+// AI ENHANCE + DOWNLOAD
 function enhance() {
-    let file = document.getElementById("ai").files[0];
-
-    if (!file) {
-        alert("Upload an image first");
-        return;
-    }
+    let file = ai.files[0];
+    if (!file) return alert("Upload image");
 
     let r = new FileReader();
-
     r.onload = e => {
         let img = new Image();
         img.src = e.target.result;
 
         img.onload = () => {
-            let c = document.getElementById("aiCanvas");
+            let c = aiCanvas;
             let ctx = c.getContext("2d");
 
             c.width = img.width;
@@ -285,18 +284,22 @@ function enhance() {
 
             ctx.drawImage(img, 0, 0);
 
-            let imgData = ctx.getImageData(0,0,c.width,c.height);
-            let d = imgData.data;
+            let d = ctx.getImageData(0,0,c.width,c.height);
+            let data = d.data;
 
-            for (let i = 0; i < d.length; i+=4) {
-                d[i] *= 1.1;
-                d[i+1] *= 1.1;
-                d[i+2] *= 1.1;
+            for (let i = 0; i < data.length; i+=4) {
+                data[i] *= 1.1;
+                data[i+1] *= 1.1;
+                data[i+2] *= 1.1;
             }
 
-            ctx.putImageData(imgData,0,0);
-        }
-    }
+            ctx.putImageData(d,0,0);
+
+            aiDownload.href = c.toDataURL();
+            aiDownload.download = "enhanced.png";
+            aiDownload.innerText = "⬇ Download Enhanced Image";
+        };
+    };
     r.readAsDataURL(file);
 }
 
