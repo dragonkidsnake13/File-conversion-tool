@@ -4,7 +4,12 @@
 <meta name="google-site-verification" content="_jqr9km-odcdcNnUpSekm0fSmdFClwBKEyQMss2JF-Q" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Ultimate File Tools</title>
+
+<!-- ✅ SEO META (ADDED) -->
+<meta name="description" content="Free online tool to convert images to PDF, PDF to images, compress images and enhance quality. Fast, secure, no upload required.">
+<meta name="keywords" content="image to pdf, pdf to image, compress image, free pdf tools, online converter">
 
 <link rel="manifest" href="manifest.json">
 
@@ -64,6 +69,13 @@ button {
 <div class="container">
 
 <h1>🚀 Ultimate File Tools</h1>
+
+<!-- ✅ SEO CONTENT (ADDED) -->
+<p>
+Welcome to Ultimate File Tools – your all-in-one free online solution to convert images to PDF, extract images from PDF files, compress images, and enhance image quality instantly.
+All tools work directly in your browser with no file upload, ensuring maximum privacy and speed.
+</p>
+
 <p class="badge">🔐 100% Private – Files never leave your device</p>
 
 <div class="ad">💰 Ad Space (Paste AdSense here)</div>
@@ -90,7 +102,11 @@ button {
 <div class="card">
 <h2>📉 Compress</h2>
 <input type="file" id="comp">
-<input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7">
+
+<!-- ✅ BETTER SLIDER (ADDED) -->
+<label>Quality: <span id="qVal">0.7</span></label>
+<input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7" oninput="qVal.innerText=this.value">
+
 <button onclick="compress()">Compress</button>
 <a id="dl"></a>
 </div>
@@ -106,6 +122,15 @@ button {
 
 <div class="ad">💰 Ad Space</div>
 
+<!-- ✅ FOOTER (ADDED FOR ADSENSE) -->
+<hr>
+<p style="text-align:center; font-size:14px;">
+<a href="privacy.html">Privacy Policy</a> |
+<a href="terms.html">Terms & Conditions</a> |
+<a href="about.html">About Us</a> |
+<a href="contact.html">Contact</a>
+</p>
+
 </div>
 
 <script>
@@ -120,6 +145,13 @@ document.getElementById("visits").innerText = "👀 Visitors: " + v;
 // IMAGE → PDF
 function toPDF() {
     let files = document.getElementById("img").files;
+
+    // ✅ ERROR HANDLING (ADDED)
+    if (!files.length) {
+        alert("Please upload images first");
+        return;
+    }
+
     let pdf = new jsPDF();
     let done = 0;
 
@@ -146,6 +178,13 @@ function toPDF() {
 // PDF → IMAGE
 function toImg() {
     let file = document.getElementById("pdf").files[0];
+
+    // ✅ ERROR HANDLING (ADDED)
+    if (!file) {
+        alert("Please upload a PDF file");
+        return;
+    }
+
     let r = new FileReader();
 
     r.onload = function() {
@@ -175,6 +214,12 @@ function toImg() {
 // COMPRESS
 function compress() {
     let file = document.getElementById("comp").files[0];
+
+    if (!file) {
+        alert("Upload an image first");
+        return;
+    }
+
     let q = document.getElementById("q").value;
 
     let r = new FileReader();
@@ -205,9 +250,15 @@ function compress() {
     r.readAsDataURL(file);
 }
 
-// AI ENHANCE (simple sharpen effect)
+// AI ENHANCE
 function enhance() {
     let file = document.getElementById("ai").files[0];
+
+    if (!file) {
+        alert("Upload an image first");
+        return;
+    }
+
     let r = new FileReader();
 
     r.onload = e => {
@@ -227,9 +278,9 @@ function enhance() {
             let d = imgData.data;
 
             for (let i = 0; i < d.length; i+=4) {
-                d[i] *= 1.1;     // R
-                d[i+1] *= 1.1;   // G
-                d[i+2] *= 1.1;   // B
+                d[i] *= 1.1;
+                d[i+1] *= 1.1;
+                d[i+2] *= 1.1;
             }
 
             ctx.putImageData(imgData,0,0);
