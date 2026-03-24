@@ -7,7 +7,6 @@
 
 <title>Ultimate File Tools</title>
 
-<!-- ✅ SEO META (ADDED) -->
 <meta name="description" content="Free online tool to convert images to PDF, PDF to images, compress images and enhance quality. Fast, secure, no upload required.">
 <meta name="keywords" content="image to pdf, pdf to image, compress image, free pdf tools, online converter">
 
@@ -70,7 +69,6 @@ button {
 
 <h1>🚀 Ultimate File Tools</h1>
 
-<!-- ✅ SEO CONTENT (ADDED) -->
 <p>
 Welcome to Ultimate File Tools – your all-in-one free online solution to convert images to PDF, extract images from PDF files, compress images, and enhance image quality instantly.
 All tools work directly in your browser with no file upload, ensuring maximum privacy and speed.
@@ -82,7 +80,6 @@ All tools work directly in your browser with no file upload, ensuring maximum pr
 
 <p id="visits"></p>
 
-<!-- MULTI IMAGE TO PDF -->
 <div class="card">
 <h2>🖼️ Images → PDF</h2>
 <input type="file" id="img" multiple>
@@ -90,7 +87,6 @@ All tools work directly in your browser with no file upload, ensuring maximum pr
 <p class="status" id="s1"></p>
 </div>
 
-<!-- PDF TO IMAGE -->
 <div class="card">
 <h2>📄 PDF → Images</h2>
 <input type="file" id="pdf">
@@ -98,12 +94,10 @@ All tools work directly in your browser with no file upload, ensuring maximum pr
 <div id="out"></div>
 </div>
 
-<!-- COMPRESS -->
 <div class="card">
 <h2>📉 Compress</h2>
 <input type="file" id="comp">
 
-<!-- ✅ BETTER SLIDER (ADDED) -->
 <label>Quality: <span id="qVal">0.7</span></label>
 <input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7" oninput="qVal.innerText=this.value">
 
@@ -111,7 +105,6 @@ All tools work directly in your browser with no file upload, ensuring maximum pr
 <a id="dl"></a>
 </div>
 
-<!-- AI ENHANCER -->
 <div class="card">
 <h2>🤖 AI Image Enhancer</h2>
 <input type="file" id="ai">
@@ -122,7 +115,6 @@ All tools work directly in your browser with no file upload, ensuring maximum pr
 
 <div class="ad">💰 Ad Space</div>
 
-<!-- ✅ FOOTER (ADDED FOR ADSENSE) -->
 <hr>
 <p style="text-align:center; font-size:14px;">
 <a href="privacy.html">Privacy Policy</a> |
@@ -142,11 +134,10 @@ v++;
 localStorage.setItem("visits", v);
 document.getElementById("visits").innerText = "👀 Visitors: " + v;
 
-// IMAGE → PDF
+// ✅ FIXED IMAGE → PDF
 function toPDF() {
     let files = document.getElementById("img").files;
 
-    // ✅ ERROR HANDLING (ADDED)
     if (!files.length) {
         alert("Please upload images first");
         return;
@@ -157,20 +148,40 @@ function toPDF() {
 
     Array.from(files).forEach((file, i) => {
         let r = new FileReader();
+
         r.onload = e => {
             let img = new Image();
             img.src = e.target.result;
 
             img.onload = () => {
+
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                const imgWidth = img.width;
+                const imgHeight = img.height;
+
+                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+
+                const newWidth = imgWidth * ratio;
+                const newHeight = imgHeight * ratio;
+
+                const x = (pdfWidth - newWidth) / 2;
+                const y = (pdfHeight - newHeight) / 2;
+
                 if (i > 0) pdf.addPage();
-                pdf.addImage(img, 'JPEG', 10, 10, 180, 160);
+
+                pdf.addImage(img, 'JPEG', x, y, newWidth, newHeight);
+
                 done++;
+
                 if (done === files.length) {
                     pdf.save("file.pdf");
                     document.getElementById("s1").innerText = "Done ✅";
                 }
             }
         }
+
         r.readAsDataURL(file);
     });
 }
@@ -179,7 +190,6 @@ function toPDF() {
 function toImg() {
     let file = document.getElementById("pdf").files[0];
 
-    // ✅ ERROR HANDLING (ADDED)
     if (!file) {
         alert("Please upload a PDF file");
         return;
