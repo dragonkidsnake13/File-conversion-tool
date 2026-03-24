@@ -134,7 +134,7 @@ v++;
 localStorage.setItem("visits", v);
 document.getElementById("visits").innerText = "👀 Visitors: " + v;
 
-// ✅ FIXED IMAGE → PDF
+// ✅ FULL PAGE FILL IMAGE → PDF
 function toPDF() {
     let files = document.getElementById("img").files;
 
@@ -161,7 +161,8 @@ function toPDF() {
                 const imgWidth = img.width;
                 const imgHeight = img.height;
 
-                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+                // 🔥 FULL FILL (no empty space)
+                const ratio = Math.max(pdfWidth / imgWidth, pdfHeight / imgHeight);
 
                 const newWidth = imgWidth * ratio;
                 const newHeight = imgHeight * ratio;
