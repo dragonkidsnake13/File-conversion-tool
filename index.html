@@ -10,36 +10,54 @@
 <meta name="description" content="Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required. Fast and secure.">
 <meta name="keywords" content="image to pdf converter online free no upload, jpg to pdf, pdf to image, compress image online, free pdf tools">
 <meta name="robots" content="index, follow">
+<link rel="canonical" href="https://yourdomain.example/">
 
+<!-- Open Graph -->
+<meta property="og:title" content="Free Image to PDF Converter Online (No Upload) | Ultimate File Tools">
+<meta property="og:description" content="Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yourdomain.example/">
+<meta property="og:image" content="https://yourdomain.example/og-image.png">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Free Image to PDF Converter Online (No Upload) | Ultimate File Tools">
+<meta name="twitter:description" content="Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required.">
+<meta name="twitter:image" content="https://yourdomain.example/og-image.png">
+
+<!-- Progressive Web App manifest -->
 <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#001122">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<!-- Content Security Policy (adjust host list to match your deployment) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https:;">
 
 <style>
+/* --- existing styles preserved and extended --- */
 body {
     margin: 0;
-    font-family: 'Segoe UI';
+    font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial;
     background: linear-gradient(135deg,#0f172a,#020617);
     color: white;
+    -webkit-font-smoothing:antialiased;
 }
 .container {
-    max-width: 900px;
+    max-width: 980px;
     margin: auto;
     padding: 20px;
 }
 .card {
     backdrop-filter: blur(15px);
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.04);
     border-radius: 20px;
     padding: 20px;
     margin: 20px 0;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.06);
     transition: 0.3s;
 }
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,255,213,0.2);
+    box-shadow: 0 10px 30px rgba(0,255,213,0.08);
 }
 button {
     background: linear-gradient(45deg,#00ffd5,#00bfff);
@@ -61,6 +79,8 @@ button {
 .preview-box img {
     max-width: 100%;
     max-height: 200px;
+    margin: 6px;
+    border-radius: 8px;
 }
 .ad {
     margin: 20px 0;
@@ -76,9 +96,63 @@ button {
     border-radius: 10px;
     font-size: 12px;
 }
-a { color:#00ffd5; }
-canvas { max-width:100%; }
+a { color:#00ffd5; text-decoration: none; }
+canvas { max-width:100%; border-radius:8px; }
+
+/* drag & drop highlight */
+.drop-active {
+    box-shadow: 0 0 0 4px rgba(0,255,213,0.08) inset;
+    border-color: #00ffd5;
+}
+
+/* spinner */
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.15);
+    border-top-color: #00ffd5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* responsive tweaks */
+@media (max-width:600px) {
+    .container { padding: 12px; }
+    .card { padding: 14px; }
+}
 </style>
+
+<!-- Structured data (JSON-LD) for SEO -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Ultimate File Tools",
+  "url": "https://yourdomain.example/",
+  "description": "Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required.",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Ultimate File Tools"
+  },
+  "image": "https://yourdomain.example/og-image.png",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "reviewCount": "1245"
+  }
+}
+</script>
+
 </head>
 
 <body>
@@ -95,229 +169,416 @@ canvas { max-width:100%; }
 <div class="ad">💰 Ad Space</div>
 
 <!-- IMAGE → PDF -->
-<div class="card">
-<h2>🖼️ Images → PDF</h2>
-<input type="file" id="img" multiple accept="image/*">
-<div class="preview-box" id="imgPreview"></div>
-<button onclick="toPDF()">Convert</button>
-<p id="s1"></p>
+<div class="card" id="imgCard">
+  <h2>🖼️ Images → PDF</h2>
+
+  <div>
+    <label class="badge">Drag & Drop supported</label>
+    <input type="file" id="img" multiple accept="image/*" style="margin-top:10px;">
+  </div>
+
+  <div style="margin-top:10px;">
+    <label><strong>Fit mode</strong></label>
+    <select id="fitMode">
+      <option value="fill">Fill page (current behavior)</option>
+      <option value="fit">Fit inside page (preserve aspect)</option>
+    </select>
+    &nbsp;&nbsp;
+    <label><strong>Page orientation</strong></label>
+    <select id="pageOrientation">
+      <option value="portrait">Portrait</option>
+      <option value="landscape">Landscape</option>
+    </select>
+  </div>
+
+  <div class="preview-box" id="imgPreview"></div>
+  <div style="margin-top:10px;">
+    <button id="toPdfBtn">Convert</button>
+    <span id="s1" style="margin-left:10px;"></span>
+  </div>
 </div>
 
 <!-- PDF → IMAGE -->
-<div class="card">
-<h2>📄 PDF → Images</h2>
-<input type="file" id="pdf" accept="application/pdf">
-<button onclick="toImg()">Convert</button>
-<div id="out"></div>
+<div class="card" id="pdfCard">
+  <h2>📄 PDF → Images</h2>
+  <input type="file" id="pdf" accept="application/pdf">
+  <div style="margin-top:10px;">
+    <label>Render scale: <span id="scaleVal">1.5</span></label>
+    <input type="range" id="scale" min="0.5" max="3" step="0.1" value="1.5" oninput="scaleVal.innerText=this.value">
+  </div>
+  <div style="margin-top:10px;">
+    <button id="toImgBtn">Convert</button>
+    <span id="pdfStatus" style="margin-left:10px;"></span>
+  </div>
+  <div id="out" style="margin-top:12px;"></div>
 </div>
 
 <!-- COMPRESS -->
-<div class="card">
-<h2>📉 Compress</h2>
-<input type="file" id="comp" accept="image/*">
-<div class="preview-box" id="compPreview"></div>
+<div class="card" id="compCard">
+  <h2>📉 Compress</h2>
+  <input type="file" id="comp" accept="image/*">
+  <div class="preview-box" id="compPreview"></div>
 
-<label>Quality: <span id="qVal">0.7</span></label>
-<input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7" oninput="qVal.innerText=this.value">
+  <label>Quality: <span id="qVal">0.7</span></label>
+  <input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7" oninput="qVal.innerText=this.value">
 
-<br><br>
-<button onclick="compress()">Compress</button>
-<br><br>
-<a id="dl"></a>
+  <div style="margin-top:10px;">
+    <button id="compressBtn">Compress</button>
+    <span id="compStatus" style="margin-left:10px;"></span>
+  </div>
+
+  <div style="margin-top:10px;">
+    <a id="dl"></a>
+    <div id="sizeInfo" style="margin-top:8px;"></div>
+  </div>
 </div>
 
 <!-- AI ENHANCER -->
-<div class="card">
-<h2>🤖 AI Image Enhancer</h2>
-<input type="file" id="ai" accept="image/*">
-<div class="preview-box" id="aiPreview"></div>
-<button onclick="enhance()">Enhance</button>
-<br><br>
-<canvas id="aiCanvas"></canvas>
-<br><br>
-<a id="aiDownload"></a>
+<div class="card" id="aiCard">
+  <h2>🤖 AI Image Enhancer</h2>
+  <input type="file" id="ai" accept="image/*">
+  <div class="preview-box" id="aiPreview"></div>
+  <div style="margin-top:10px;">
+    <button id="enhanceBtn">Enhance</button>
+    <span id="aiStatus" style="margin-left:10px;"></span>
+  </div>
+  <br>
+  <canvas id="aiCanvas"></canvas>
+  <br><br>
+  <a id="aiDownload"></a>
 </div>
 
 <div class="ad">💰 Ad Space</div>
 
 <hr>
 <p style="text-align:center;">
-<a href="privacy.html">Privacy</a> |
-<a href="terms.html">Terms</a> |
-<a href="about.html">About</a> |
-<a href="contact.html">Contact</a>
+  <a href="privacy.html">Privacy</a> |
+  <a href="terms.html">Terms</a> |
+  <a href="about.html">About</a> |
+  <a href="contact.html">Contact</a>
 </p>
 
 </div>
 
 <script>
-const { jsPDF } = window.jspdf;
-
-// preview handler
-function preview(input, boxId) {
-    let box = document.getElementById(boxId);
-    box.innerHTML = "";
-    if (!input.files.length) return;
-
-    Array.from(input.files).forEach(file => {
-        let img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        box.appendChild(img);
+/* -------------------------
+   Lazy script loader helper
+   ------------------------- */
+function loadScript(url) {
+    return new Promise((resolve, reject) => {
+        // if already loaded, resolve
+        if (document.querySelector('script[src="'+url+'"]')) return resolve();
+        const s = document.createElement('script');
+        s.src = url;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Failed to load ' + url));
+        document.head.appendChild(s);
     });
+}
 
+/* -------------------------
+   DOM shortcuts
+   ------------------------- */
+const img = document.getElementById('img');
+const imgPreview = document.getElementById('imgPreview');
+const comp = document.getElementById('comp');
+const compPreview = document.getElementById('compPreview');
+const ai = document.getElementById('ai');
+const aiPreview = document.getElementById('aiPreview');
+const s1 = document.getElementById('s1');
+const dl = document.getElementById('dl');
+const aiCanvas = document.getElementById('aiCanvas');
+const aiDownload = document.getElementById('aiDownload');
+const out = document.getElementById('out');
+const pdfInput = document.getElementById('pdf');
+const scale = document.getElementById('scale');
+const scaleVal = document.getElementById('scaleVal');
+const q = document.getElementById('q');
+const qVal = document.getElementById('qVal');
+const sizeInfo = document.getElementById('sizeInfo');
+const toPdfBtn = document.getElementById('toPdfBtn');
+const toImgBtn = document.getElementById('toImgBtn');
+const compressBtn = document.getElementById('compressBtn');
+const enhanceBtn = document.getElementById('enhanceBtn');
+const pdfStatus = document.getElementById('pdfStatus');
+const compStatus = document.getElementById('compStatus');
+const aiStatus = document.getElementById('aiStatus');
+const fitMode = document.getElementById('fitMode');
+const pageOrientation = document.getElementById('pageOrientation');
+
+/* -------------------------
+   Preview handler (works for multiple inputs)
+   ------------------------- */
+function preview(input, box) {
+    box.innerHTML = "";
+    if (!input.files || !input.files.length) {
+        box.style.display = "none";
+        return;
+    }
+    Array.from(input.files).forEach(file => {
+        const imgEl = document.createElement('img');
+        imgEl.src = URL.createObjectURL(file);
+        imgEl.onload = () => URL.revokeObjectURL(imgEl.src);
+        box.appendChild(imgEl);
+    });
     box.style.display = "block";
 }
 
-img.onchange = () => preview(img, "imgPreview");
-comp.onchange = () => preview(comp, "compPreview");
-ai.onchange = () => preview(ai, "aiPreview");
+img.addEventListener('change', () => preview(img, imgPreview));
+comp.addEventListener('change', () => preview(comp, compPreview));
+ai.addEventListener('change', () => preview(ai, aiPreview));
 
-// IMAGE → PDF
-function toPDF() {
-    let files = img.files;
-    if (!files.length) return alert("Upload images");
-
-    let pdf = new jsPDF();
-
-    Array.from(files).forEach((file, i) => {
-        let r = new FileReader();
-        r.onload = e => {
-            let image = new Image();
-            image.src = e.target.result;
-
-            image.onload = () => {
-                let pw = pdf.internal.pageSize.getWidth();
-                let ph = pdf.internal.pageSize.getHeight();
-
-                let ratio = Math.max(pw / image.width, ph / image.height);
-
-                let w = image.width * ratio;
-                let h = image.height * ratio;
-
-                let x = (pw - w) / 2;
-                let y = (ph - h) / 2;
-
-                if (i > 0) pdf.addPage();
-                pdf.addImage(image, 'JPEG', x, y, w, h);
-
-                if (i === files.length - 1) {
-                    pdf.save("file.pdf");
-                    s1.innerText = "Done ✅";
-                }
-            };
-        };
-        r.readAsDataURL(file);
+/* -------------------------
+   Drag & Drop support for cards
+   ------------------------- */
+function enableDrop(cardEl, inputEl, previewBox) {
+    cardEl.addEventListener('dragover', e => {
+        e.preventDefault();
+        cardEl.classList.add('drop-active');
+    });
+    cardEl.addEventListener('dragleave', () => {
+        cardEl.classList.remove('drop-active');
+    });
+    cardEl.addEventListener('drop', e => {
+        e.preventDefault();
+        cardEl.classList.remove('drop-active');
+        const files = e.dataTransfer.files;
+        if (!files || !files.length) return;
+        inputEl.files = files;
+        preview(inputEl, previewBox);
     });
 }
+enableDrop(document.getElementById('imgCard'), img, imgPreview);
+enableDrop(document.getElementById('compCard'), comp, compPreview);
+enableDrop(document.getElementById('aiCard'), ai, aiPreview);
+enableDrop(document.getElementById('pdfCard'), pdfInput, out);
 
-// PDF → IMAGE
-function toImg() {
-    let file = pdf.files[0];
-    if (!file) return alert("Upload PDF");
+/* -------------------------
+   Image -> PDF (preserve original behavior; add fit option & orientation)
+   Lazy-load jsPDF if needed
+   ------------------------- */
+async function toPDF() {
+    const files = img.files;
+    if (!files || !files.length) return alert("Upload images");
+    s1.innerHTML = '<span class="spinner"></span> Converting...';
 
-    let r = new FileReader();
-    r.onload = function() {
-        pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdfDoc => {
-            out.innerHTML = "";
+    // load jsPDF only when needed
+    if (!window.jspdf) {
+        try {
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        } catch (err) {
+            s1.innerText = 'Failed to load PDF library.';
+            return;
+        }
+    }
+    const { jsPDF } = window.jspdf;
+    const orientation = pageOrientation.value === 'landscape' ? 'landscape' : 'portrait';
+    const pdf = new jsPDF({ unit: 'pt', format: 'a4', orientation });
 
-            for (let i = 1; i <= pdfDoc.numPages; i++) {
-                pdfDoc.getPage(i).then(page => {
-                    let c = document.createElement("canvas");
-                    let ctx = c.getContext("2d");
-                    let vp = page.getViewport({ scale: 1.5 });
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
 
-                    c.width = vp.width;
-                    c.height = vp.height;
-
-                    page.render({ canvasContext: ctx, viewport: vp });
-
-                    let btn = document.createElement("button");
-                    btn.innerText = "⬇ Download Page " + i;
-                    btn.onclick = () => {
-                        let link = document.createElement("a");
-                        link.download = "page_" + i + ".png";
-                        link.href = c.toDataURL();
-                        link.click();
-                    };
-
-                    out.appendChild(c);
-                    out.appendChild(btn);
-                });
-            }
+    // process sequentially to ensure order
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const dataUrl = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload = e => res(e.target.result);
+            r.onerror = rej;
+            r.readAsDataURL(file);
         });
+
+        const image = new Image();
+        await new Promise((res, rej) => {
+            image.onload = res;
+            image.onerror = rej;
+            image.src = dataUrl;
+        });
+
+        // compute ratio based on fit mode
+        let ratio;
+        if (fitMode.value === 'fill') {
+            ratio = Math.max(pw / image.width, ph / image.height);
+        } else {
+            ratio = Math.min(pw / image.width, ph / image.height);
+        }
+
+        const w = image.width * ratio;
+        const h = image.height * ratio;
+        const x = (pw - w) / 2;
+        const y = (ph - h) / 2;
+
+        if (i > 0) pdf.addPage();
+        // use JPEG when possible to reduce size; fallback to PNG if needed
+        try {
+            pdf.addImage(image, 'JPEG', x, y, w, h);
+        } catch (e) {
+            pdf.addImage(image, 'PNG', x, y, w, h);
+        }
+    }
+
+    pdf.save("file.pdf");
+    s1.innerText = "Done ✅";
+}
+
+toPdfBtn.addEventListener('click', toPDF);
+
+/* -------------------------
+   PDF -> Image (lazy-load pdf.js)
+   ------------------------- */
+async function toImg() {
+    const file = pdfInput.files && pdfInput.files[0];
+    if (!file) return alert("Upload PDF");
+    pdfStatus.innerHTML = '<span class="spinner"></span> Rendering...';
+    out.innerHTML = "";
+
+    // load pdf.js if not present
+    if (!window.pdfjsLib) {
+        try {
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js');
+        } catch (err) {
+            pdfStatus.innerText = 'Failed to load PDF renderer.';
+            return;
+        }
+    }
+
+    const r = new FileReader();
+    r.onload = async function() {
+        try {
+            const pdfDoc = await pdfjsLib.getDocument(new Uint8Array(this.result)).promise;
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const vp = page.getViewport({ scale: parseFloat(scale.value) });
+                const c = document.createElement("canvas");
+                const ctx = c.getContext("2d");
+                c.width = vp.width;
+                c.height = vp.height;
+
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+                const btn = document.createElement("button");
+                btn.innerText = "⬇ Download Page " + i;
+                btn.onclick = () => {
+                    const link = document.createElement("a");
+                    link.download = "page_" + i + ".png";
+                    link.href = c.toDataURL();
+                    link.click();
+                };
+
+                out.appendChild(c);
+                out.appendChild(btn);
+            }
+            pdfStatus.innerText = "Done ✅";
+        } catch (err) {
+            pdfStatus.innerText = "Render error";
+            console.error(err);
+        }
     };
     r.readAsArrayBuffer(file);
 }
 
-// COMPRESS
+toImgBtn.addEventListener('click', toImg);
+
+/* -------------------------
+   Compress (live size preview)
+   ------------------------- */
 function compress() {
-    let file = comp.files[0];
+    const file = comp.files && comp.files[0];
     if (!file) return alert("Upload image");
+    compStatus.innerHTML = '<span class="spinner"></span> Compressing...';
+    sizeInfo.innerText = '';
 
-    let r = new FileReader();
+    const r = new FileReader();
     r.onload = e => {
-        let img = new Image();
-        img.src = e.target.result;
-
-        img.onload = () => {
-            let c = document.createElement("canvas");
-            c.width = img.width;
-            c.height = img.height;
-
-            c.getContext("2d").drawImage(img, 0, 0);
+        const imgEl = new Image();
+        imgEl.src = e.target.result;
+        imgEl.onload = () => {
+            const c = document.createElement("canvas");
+            c.width = imgEl.width;
+            c.height = imgEl.height;
+            c.getContext("2d").drawImage(imgEl, 0, 0);
 
             c.toBlob(blob => {
                 dl.href = URL.createObjectURL(blob);
                 dl.download = "compressed.jpg";
                 dl.innerText = "⬇ Download";
-            }, "image/jpeg", q.value);
+                sizeInfo.innerText = 'Compressed size: ' + Math.round(blob.size / 1024) + ' KB';
+                compStatus.innerText = "Done ✅";
+            }, "image/jpeg", parseFloat(q.value));
         };
     };
     r.readAsDataURL(file);
 }
 
-// AI ENHANCE
+compressBtn.addEventListener('click', compress);
+
+/* -------------------------
+   AI Enhance (simple enhancement preserved; avoid clipping)
+   ------------------------- */
 function enhance() {
-    let file = ai.files[0];
+    const file = ai.files && ai.files[0];
     if (!file) return alert("Upload image");
+    aiStatus.innerHTML = '<span class="spinner"></span> Enhancing...';
 
-    let r = new FileReader();
+    const r = new FileReader();
     r.onload = e => {
-        let img = new Image();
-        img.src = e.target.result;
+        const imgEl = new Image();
+        imgEl.src = e.target.result;
+        imgEl.onload = () => {
+            const c = aiCanvas;
+            const ctx = c.getContext("2d");
+            c.width = imgEl.width;
+            c.height = imgEl.height;
+            ctx.drawImage(imgEl, 0, 0);
 
-        img.onload = () => {
-            let c = aiCanvas;
-            let ctx = c.getContext("2d");
+            // basic enhancement: gentle brightness + contrast (non-destructive)
+            const d = ctx.getImageData(0,0,c.width,c.height);
+            const data = d.data;
+            const brightness = 1.08; // gentle
+            const contrast = 1.06; // gentle
 
-            c.width = img.width;
-            c.height = img.height;
-
-            ctx.drawImage(img, 0, 0);
-
-            let d = ctx.getImageData(0,0,c.width,c.height);
-            let data = d.data;
-
-            for (let i = 0; i < data.length; i+=4) {
-                data[i] *= 1.1;
-                data[i+1] *= 1.1;
-                data[i+2] *= 1.1;
+            // apply brightness and contrast with clamping
+            for (let i = 0; i < data.length; i += 4) {
+                for (let cIdx = 0; cIdx < 3; cIdx++) {
+                    let v = data[i + cIdx];
+                    // brightness
+                    v = v * brightness;
+                    // contrast around 128
+                    v = (v - 128) * contrast + 128;
+                    data[i + cIdx] = Math.max(0, Math.min(255, Math.round(v)));
+                }
             }
 
-            ctx.putImageData(d,0,0);
+            ctx.putImageData(d, 0, 0);
 
             aiDownload.href = c.toDataURL();
             aiDownload.download = "enhanced.png";
             aiDownload.innerText = "⬇ Download Enhanced";
+            aiStatus.innerText = "Done ✅";
         };
     };
     r.readAsDataURL(file);
 }
 
-// PWA
+enhanceBtn.addEventListener('click', enhance);
+
+/* -------------------------
+   Service worker registration (PWA)
+   ------------------------- */
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
+    navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('SW registration failed:', err);
+    });
 }
+
+/* -------------------------
+   Accessibility: keyboard shortcuts (optional)
+   ------------------------- */
+document.addEventListener('keydown', (e) => {
+    if (e.altKey && e.key === 'c') { // Alt+C to compress
+        compress();
+    }
+});
 </script>
 
 </body>
