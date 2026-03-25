@@ -7,8 +7,8 @@
 
 <title>Free Image to PDF Converter Online (No Upload) | Ultimate File Tools</title>
 
-<meta name="description" content="Convert images to PDF online for free without uploading. Fast, secure JPG to PDF converter that works on mobile and desktop.">
-<meta name="keywords" content="image to pdf converter online free no upload, jpg to pdf browser tool, convert images to pdf without uploading, free image to pdf mobile">
+<meta name="description" content="Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required. Fast and secure.">
+<meta name="keywords" content="image to pdf converter online free no upload, jpg to pdf, pdf to image, compress image online, free pdf tools">
 <meta name="robots" content="index, follow">
 
 <link rel="manifest" href="manifest.json">
@@ -77,6 +77,7 @@ button {
     font-size: 12px;
 }
 a { color:#00ffd5; }
+canvas { max-width:100%; }
 </style>
 </head>
 
@@ -87,36 +88,13 @@ a { color:#00ffd5; }
 <h1>🚀 Ultimate File Tools</h1>
 <p class="badge">🔐 100% Private – Files never leave your device</p>
 
-<!-- 🔥 SEO CONTENT -->
+<!-- SEO CONTENT -->
 <h2>Free Image to PDF Converter Online (No Upload Required)</h2>
-
-<p>
-Convert images to PDF online instantly with our free tool. This image to PDF converter works directly in your browser without uploading files. Easily convert JPG to PDF, PNG to PDF, or merge multiple images into one PDF file.
-</p>
-
-<p>
-Our tool is fast, secure, and designed for students, professionals, and anyone needing quick file conversion. No sign-up, no uploads, and no limits.
-</p>
-
-<h3>Why Use This Tool?</h3>
-<ul>
-<li>⚡ Instant conversion</li>
-<li>🔒 100% private</li>
-<li>📱 Mobile-friendly</li>
-<li>🖼️ Supports multiple formats</li>
-<li>💯 Free forever</li>
-</ul>
-
-<h3>How to Convert Images to PDF</h3>
-<ol>
-<li>Select your images</li>
-<li>Click convert</li>
-<li>Download your PDF</li>
-</ol>
+<p>Convert JPG, PNG images into PDF instantly without uploading. Fast, secure and free tool.</p>
 
 <div class="ad">💰 Ad Space</div>
 
-<!-- TOOL -->
+<!-- IMAGE → PDF -->
 <div class="card">
 <h2>🖼️ Images → PDF</h2>
 <input type="file" id="img" multiple accept="image/*">
@@ -125,15 +103,42 @@ Our tool is fast, secure, and designed for students, professionals, and anyone n
 <p id="s1"></p>
 </div>
 
-<!-- FAQ -->
+<!-- PDF → IMAGE -->
 <div class="card">
-<h3>FAQs</h3>
-
-<p><b>Is this free?</b><br>Yes, completely free.</p>
-<p><b>Is it safe?</b><br>Yes, files never leave your device.</p>
-<p><b>Can I convert multiple images?</b><br>Yes.</p>
-
+<h2>📄 PDF → Images</h2>
+<input type="file" id="pdf" accept="application/pdf">
+<button onclick="toImg()">Convert</button>
+<div id="out"></div>
 </div>
+
+<!-- COMPRESS -->
+<div class="card">
+<h2>📉 Compress</h2>
+<input type="file" id="comp" accept="image/*">
+<div class="preview-box" id="compPreview"></div>
+
+<label>Quality: <span id="qVal">0.7</span></label>
+<input type="range" id="q" min="0.1" max="1" step="0.1" value="0.7" oninput="qVal.innerText=this.value">
+
+<br><br>
+<button onclick="compress()">Compress</button>
+<br><br>
+<a id="dl"></a>
+</div>
+
+<!-- AI ENHANCER -->
+<div class="card">
+<h2>🤖 AI Image Enhancer</h2>
+<input type="file" id="ai" accept="image/*">
+<div class="preview-box" id="aiPreview"></div>
+<button onclick="enhance()">Enhance</button>
+<br><br>
+<canvas id="aiCanvas"></canvas>
+<br><br>
+<a id="aiDownload"></a>
+</div>
+
+<div class="ad">💰 Ad Space</div>
 
 <hr>
 <p style="text-align:center;">
@@ -148,19 +153,26 @@ Our tool is fast, secure, and designed for students, professionals, and anyone n
 <script>
 const { jsPDF } = window.jspdf;
 
-// preview
-img.onchange = () => {
-    let box = document.getElementById("imgPreview");
+// preview handler
+function preview(input, boxId) {
+    let box = document.getElementById(boxId);
     box.innerHTML = "";
-    Array.from(img.files).forEach(file => {
-        let im = document.createElement("img");
-        im.src = URL.createObjectURL(file);
-        box.appendChild(im);
-    });
-    box.style.display = "block";
-};
+    if (!input.files.length) return;
 
-// IMAGE → PDF (FULL PAGE)
+    Array.from(input.files).forEach(file => {
+        let img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        box.appendChild(img);
+    });
+
+    box.style.display = "block";
+}
+
+img.onchange = () => preview(img, "imgPreview");
+comp.onchange = () => preview(comp, "compPreview");
+ai.onchange = () => preview(ai, "aiPreview");
+
+// IMAGE → PDF
 function toPDF() {
     let files = img.files;
     if (!files.length) return alert("Upload images");
@@ -198,8 +210,112 @@ function toPDF() {
     });
 }
 
+// PDF → IMAGE
+function toImg() {
+    let file = pdf.files[0];
+    if (!file) return alert("Upload PDF");
+
+    let r = new FileReader();
+    r.onload = function() {
+        pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdfDoc => {
+            out.innerHTML = "";
+
+            for (let i = 1; i <= pdfDoc.numPages; i++) {
+                pdfDoc.getPage(i).then(page => {
+                    let c = document.createElement("canvas");
+                    let ctx = c.getContext("2d");
+                    let vp = page.getViewport({ scale: 1.5 });
+
+                    c.width = vp.width;
+                    c.height = vp.height;
+
+                    page.render({ canvasContext: ctx, viewport: vp });
+
+                    let btn = document.createElement("button");
+                    btn.innerText = "⬇ Download Page " + i;
+                    btn.onclick = () => {
+                        let link = document.createElement("a");
+                        link.download = "page_" + i + ".png";
+                        link.href = c.toDataURL();
+                        link.click();
+                    };
+
+                    out.appendChild(c);
+                    out.appendChild(btn);
+                });
+            }
+        });
+    };
+    r.readAsArrayBuffer(file);
+}
+
+// COMPRESS
+function compress() {
+    let file = comp.files[0];
+    if (!file) return alert("Upload image");
+
+    let r = new FileReader();
+    r.onload = e => {
+        let img = new Image();
+        img.src = e.target.result;
+
+        img.onload = () => {
+            let c = document.createElement("canvas");
+            c.width = img.width;
+            c.height = img.height;
+
+            c.getContext("2d").drawImage(img, 0, 0);
+
+            c.toBlob(blob => {
+                dl.href = URL.createObjectURL(blob);
+                dl.download = "compressed.jpg";
+                dl.innerText = "⬇ Download";
+            }, "image/jpeg", q.value);
+        };
+    };
+    r.readAsDataURL(file);
+}
+
+// AI ENHANCE
+function enhance() {
+    let file = ai.files[0];
+    if (!file) return alert("Upload image");
+
+    let r = new FileReader();
+    r.onload = e => {
+        let img = new Image();
+        img.src = e.target.result;
+
+        img.onload = () => {
+            let c = aiCanvas;
+            let ctx = c.getContext("2d");
+
+            c.width = img.width;
+            c.height = img.height;
+
+            ctx.drawImage(img, 0, 0);
+
+            let d = ctx.getImageData(0,0,c.width,c.height);
+            let data = d.data;
+
+            for (let i = 0; i < data.length; i+=4) {
+                data[i] *= 1.1;
+                data[i+1] *= 1.1;
+                data[i+2] *= 1.1;
+            }
+
+            ctx.putImageData(d,0,0);
+
+            aiDownload.href = c.toDataURL();
+            aiDownload.download = "enhanced.png";
+            aiDownload.innerText = "⬇ Download Enhanced";
+        };
+    };
+    r.readAsDataURL(file);
+}
+
 // PWA
-if ('serviceWorker' in navigator') {
+if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
 }
 </script>
