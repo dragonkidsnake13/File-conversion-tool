@@ -10,30 +10,30 @@
 <meta name="description" content="Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required. Fast and secure.">
 <meta name="keywords" content="image to pdf converter online free no upload, jpg to pdf, pdf to image, compress image online, free pdf tools">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://yourdomain.example/">
+<link rel="canonical" href="https://dragonkidsnake13.github.io/File-conversion-tool/">
 
 <!-- Open Graph -->
 <meta property="og:title" content="Free Image to PDF Converter Online (No Upload) | Ultimate File Tools">
 <meta property="og:description" content="Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://yourdomain.example/">
-<meta property="og:image" content="https://yourdomain.example/og-image.png">
+<meta property="og:url" content="https://dragonkidsnake13.github.io/File-conversion-tool/">
+<meta property="og:image" content="https://dragonkidsnake13.github.io/File-conversion-tool/og-image.png">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Free Image to PDF Converter Online (No Upload) | Ultimate File Tools">
 <meta name="twitter:description" content="Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required.">
-<meta name="twitter:image" content="https://yourdomain.example/og-image.png">
+<meta name="twitter:image" content="https://dragonkidsnake13.github.io/File-conversion-tool/og-image.png">
 
 <!-- Progressive Web App manifest -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#001122">
 
-<!-- Content Security Policy (adjust host list to match your deployment) -->
+<!-- Content Security Policy (adjust hosts if you self-host libs) -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https:;">
 
 <style>
-/* --- existing styles preserved and extended --- */
+/* --- styles preserved and extended --- */
 body {
     margin: 0;
     font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial;
@@ -131,7 +131,7 @@ canvas { max-width:100%; border-radius:8px; }
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "Ultimate File Tools",
-  "url": "https://yourdomain.example/",
+  "url": "https://dragonkidsnake13.github.io/File-conversion-tool/",
   "description": "Convert images to PDF, PDF to images, compress images and enhance quality online for free. No upload required.",
   "applicationCategory": "MultimediaApplication",
   "operatingSystem": "Web",
@@ -144,7 +144,7 @@ canvas { max-width:100%; border-radius:8px; }
     "@type": "Organization",
     "name": "Ultimate File Tools"
   },
-  "image": "https://yourdomain.example/og-image.png",
+  "image": "https://dragonkidsnake13.github.io/File-conversion-tool/og-image.png",
   "aggregateRating": {
     "@type": "AggregateRating",
     "ratingValue": "4.8",
@@ -266,7 +266,6 @@ canvas { max-width:100%; border-radius:8px; }
    ------------------------- */
 function loadScript(url) {
     return new Promise((resolve, reject) => {
-        // if already loaded, resolve
         if (document.querySelector('script[src="'+url+'"]')) return resolve();
         const s = document.createElement('script');
         s.src = url;
@@ -292,9 +291,7 @@ const aiDownload = document.getElementById('aiDownload');
 const out = document.getElementById('out');
 const pdfInput = document.getElementById('pdf');
 const scale = document.getElementById('scale');
-const scaleVal = document.getElementById('scaleVal');
 const q = document.getElementById('q');
-const qVal = document.getElementById('qVal');
 const sizeInfo = document.getElementById('sizeInfo');
 const toPdfBtn = document.getElementById('toPdfBtn');
 const toImgBtn = document.getElementById('toImgBtn');
